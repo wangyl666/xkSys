@@ -25,7 +25,7 @@ public class AuthService {
     public UserDTO login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
         
-        if (userOpt.isEmpty()) {
+        if (!userOpt.isPresent()) {
             throw new RuntimeException("用户不存在");
         }
 

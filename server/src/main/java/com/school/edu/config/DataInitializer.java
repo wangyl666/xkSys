@@ -1,8 +1,6 @@
 package com.school.edu.config;
 
-import com.school.edu.entity.Course;
 import com.school.edu.entity.User;
-import com.school.edu.repository.CourseRepository;
 import com.school.edu.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -17,9 +15,6 @@ public class DataInitializer implements CommandLineRunner {
     private UserRepository userRepository;
 
     @Autowired
-    private CourseRepository courseRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -30,7 +25,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initTeachers() {
         Optional<User> teacher1 = userRepository.findByUsername("teacher1");
-        if (teacher1.isEmpty()) {
+        if (!teacher1.isPresent()) {
             User t1 = new User();
             t1.setUsername("teacher1");
             t1.setPassword(passwordEncoder.encode("123456"));
@@ -42,7 +37,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         Optional<User> teacher2 = userRepository.findByUsername("teacher2");
-        if (teacher2.isEmpty()) {
+        if (!teacher2.isPresent()) {
             User t2 = new User();
             t2.setUsername("teacher2");
             t2.setPassword(passwordEncoder.encode("123456"));
@@ -54,7 +49,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         Optional<User> teacher3 = userRepository.findByUsername("teacher3");
-        if (teacher3.isEmpty()) {
+        if (!teacher3.isPresent()) {
             User t3 = new User();
             t3.setUsername("teacher3");
             t3.setPassword(passwordEncoder.encode("123456"));
@@ -68,7 +63,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initStudents() {
         Optional<User> student1 = userRepository.findByUsername("student1");
-        if (student1.isEmpty()) {
+        if (!student1.isPresent()) {
             User s1 = new User();
             s1.setUsername("student1");
             s1.setPassword(passwordEncoder.encode("123456"));
@@ -80,7 +75,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         Optional<User> student2 = userRepository.findByUsername("student2");
-        if (student2.isEmpty()) {
+        if (!student2.isPresent()) {
             User s2 = new User();
             s2.setUsername("student2");
             s2.setPassword(passwordEncoder.encode("123456"));

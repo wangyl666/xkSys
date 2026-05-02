@@ -10,6 +10,7 @@ import com.school.edu.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,7 +87,7 @@ public class EnrollmentService {
                 .orElseThrow(() -> new RuntimeException("未找到该选课记录"));
 
         enrollment.setStatus(Enrollment.EnrollmentStatus.DROPPED);
-        enrollment.setDroppedAt(java.time.LocalDateTime.now());
+        enrollment.setDroppedAt(LocalDateTime.now());
         enrollmentRepository.save(enrollment);
 
         Course course = enrollment.getCourse();
