@@ -27,24 +27,22 @@
             </tr>
           </thead>
           <tbody>
-            <template v-for="section in 12" :key="section">
-              <tr v-if="!isMergedSection(section)">
-                <td class="section-cell">
-                  <div class="section-num">第{{ section }}节</div>
-                </td>
-                <td class="time-cell">
-                  <div class="section-time">{{ getSectionTime(section) }}</div>
-                </td>
+            <tr v-for="section in 12" :key="section">
+              <td class="section-cell">
+                <div class="section-num">第{{ section }}节</div>
+              </td>
+              <td class="time-cell">
+                <div class="section-time">{{ getSectionTime(section) }}</div>
+              </td>
+              <template v-for="(day, dayIndex) in days" :key="day">
                 <td
-                  v-for="(day, dayIndex) in days"
-                  :key="day"
+                  v-if="!isCellHidden(section, dayIndex)"
                   :style="getCellStyle(section, dayIndex)"
                   :rowspan="getRowSpan(section, dayIndex)"
                 >
                   <template v-if="hasCourseAt(section, dayIndex) && isStartSection(section, dayIndex)">
                     <div
                       class="course-cell"
-                      :class="getCourseClass(section, dayIndex)"
                       :style="getCourseStyle(section, dayIndex)"
                     >
                       <div class="course-name">{{ getCourseAt(section, dayIndex)?.courseName }}</div>
@@ -53,8 +51,8 @@
                     </div>
                   </template>
                 </td>
-              </tr>
-            </template>
+              </template>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -167,20 +165,16 @@ const isStartSection = (section, dayIndex) => {
   return course && section === course.startSection
 }
 
-const isMergedSection = (section) => {
-  const course = courses.value.find(c => {
-    return section > c.startSection && section <= c.endSection
-  })
-  return !!course
+const isCellHidden = (section, dayIndex) => {
+  const course = getCourseAt(section, dayIndex)
+  if (!course) return false
+  return section > course.startSection && section <= course.endSection
 }
 
 const getRowSpan = (section, dayIndex) => {
   const course = getCourseAt(section, dayIndex)
   if (course && section === course.startSection) {
     return course.endSection - course.startSection + 1
-  }
-  if (isMergedSection(section) && hasCourseAt(section, dayIndex)) {
-    return 0
   }
   return 1
 }
@@ -195,15 +189,6 @@ const getCellStyle = (section, dayIndex) => {
     }
   }
   return {}
-}
-
-const getCourseClass = (section, dayIndex) => {
-  const course = getCourseAt(section, dayIndex)
-  if (course && section === course.startSection) {
-    const rowSpan = course.endSection - course.startSection + 1
-    return `multi-row-${rowSpan}`
-  }
-  return ''
 }
 
 const getCourseStyle = (section, dayIndex) => {
