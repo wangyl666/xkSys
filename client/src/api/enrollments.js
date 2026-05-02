@@ -11,3 +11,7 @@ export function enrollCourse(courseId) {
 export function dropCourse(courseId) {
   return request.delete(`/enrollments/drop/${courseId}`)
 }
+
+export function getEnrolledStudents(courseId) {
+  return request.get(`/enrollments/course/${courseId}/students`)
+}

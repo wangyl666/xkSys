@@ -6,6 +6,8 @@
       <p v-else-if="userStore.isStudent">{{ userStore.user?.name }}同学，欢迎您！</p>
     </el-card>
 
+    <ScheduleReminder :is-teacher="userStore.isTeacher" />
+
     <el-row :gutter="20" class="stats-row">
       <el-col :span="8" v-if="userStore.isTeacher">
         <el-card class="stat-card">
@@ -73,6 +75,14 @@
           查看我的课程
         </el-button>
         <el-button
+          v-if="userStore.isTeacher"
+          size="large"
+          @click="$router.push('/teacher-schedule')"
+        >
+          <el-icon><Calendar /></el-icon>
+          查看我的课表
+        </el-button>
+        <el-button
           v-if="userStore.isStudent"
           type="primary"
           size="large"
@@ -99,6 +109,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getTeacherCourses } from '@/api/courses'
 import { getMyCourses } from '@/api/enrollments'
+import ScheduleReminder from '@/components/ScheduleReminder.vue'
 
 const userStore = useUserStore()
 
@@ -143,6 +154,7 @@ onMounted(async () => {
 
 .stats-row {
   margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .stat-card {

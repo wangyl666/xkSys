@@ -1,6 +1,7 @@
 package com.school.edu.service;
 
 import com.school.edu.dto.CourseDTO;
+import com.school.edu.dto.UserDTO;
 import com.school.edu.entity.Course;
 import com.school.edu.entity.Enrollment;
 import com.school.edu.entity.User;
@@ -131,6 +132,24 @@ public class EnrollmentService {
         dto.setStatus(course.getStatus());
         dto.setTeacherId(course.getTeacher().getId());
         dto.setTeacherName(course.getTeacher().getName());
+        return dto;
+    }
+
+    public List<UserDTO> getEnrolledStudents(Long courseId) {
+        List<Enrollment> enrollments = enrollmentRepository.findEnrolledStudentsWithDetails(courseId);
+        return enrollments.stream()
+                .map(e -> toUserDTO(e.getStudent()))
+                .collect(Collectors.toList());
+    }
+
+    private UserDTO toUserDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setName(user.getName());
+        dto.setRole(user.getRole());
+        dto.setDepartment(user.getDepartment());
+        dto.setEmail(user.getEmail());
         return dto;
     }
 }

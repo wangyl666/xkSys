@@ -1,10 +1,10 @@
 <template>
-  <div class="schedule">
+  <div class="teacher-schedule">
     <el-card>
       <template #header>
         <div class="card-header">
           <span>我的课表</span>
-          <el-button type="primary" @click="fetchMyCourses">
+          <el-button type="primary" @click="fetchTeacherCourses">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -46,10 +46,14 @@
                       class="course-cell"
                       :class="getCourseClass(section, dayIndex)"
                       :style="getCourseStyle(section, dayIndex)"
+                      @click="showCourseStudents(getCourseAt(section, dayIndex))"
                     >
                       <div class="course-name">{{ getCourseAt(section, dayIndex)?.courseName }}</div>
-                      <div class="course-teacher">{{ getCourseAt(section, dayIndex)?.teacherName }}</div>
-                      <div class="course-location">{{ getCourseAt(section, dayIndex)?.location }}</div>
+                      <div class="course-info">
+                        <span class="course-location">{{ getCourseAt(section, dayIndex)?.location }}</span>
+                        <span class="course-students">{{ getCourseAt(section, dayIndex)?.enrolledStudents }}/{{ getCourseAt(section, dayIndex)?.maxStudents }}</span>
+                      </div>
+                      <div class="course-hint">点击查看学生</div>
                     </div>
                   </template>
                 </td>
@@ -61,11 +65,9 @@
 
       <el-empty
         v-if="!loading && courses.length === 0"
-        description="暂无课程，快去选课吧"
+        description="暂无课程"
         style="margin-top: 40px"
-      >
-        <el-button type="primary" @click="$router.push('/select-courses')">去选课</el-button>
-      </el-empty>
+      />
     </el-card>
 
     <el-card v-if="courses.length > 0" style="margin-top: 20px">
@@ -77,25 +79,49 @@
           v-for="course in courses"
           :key="course.id"
           class="legend-item"
+          @click="showCourseStudents(course)"
         >
           <span class="legend-color" :style="{ backgroundColor: getCourseColor(course.id) }"></span>
           <span class="legend-name">{{ course.courseName }}</span>
           <span class="legend-detail">
             {{ formatDayOfWeek(course.dayOfWeek) }} 第{{ course.startSection }}-{{ course.endSection }}节 @ {{ course.location || '待定' }}
           </span>
-          <span class="legend-teacher">{{ course.teacherName }}</span>
+          <span class="legend-students">{{ course.enrolledStudents }}/{{ course.maxStudents }}人</span>
         </div>
       </div>
     </el-card>
+
+    <el-dialog
+      v-model="studentsDialogVisible"
+      :title="`${currentCourse?.courseName} - 选课学生列表`"
+      width="600px"
+    >
+      <el-table :data="enrolledStudents" v-loading="studentsLoading" stripe>
+        <el-table-column prop="name" label="姓名" width="120" />
+        <el-table-column prop="username" label="学号" width="150" />
+        <el-table-column prop="department" label="院系" />
+        <el-table-column prop="email" label="邮箱" />
+      </el-table>
+      <el-empty v-if="!studentsLoading && enrolledStudents.length === 0" description="暂无学生选课" />
+      <template #footer>
+        <el-button @click="studentsDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getMyCourses } from '@/api/enrollments'
+import { ElMessage } from 'element-plus'
+import { getTeacherCourses } from '@/api/courses'
+import { getEnrolledStudents } from '@/api/enrollments'
 
 const courses = ref([])
 const loading = ref(false)
+const studentsDialogVisible = ref(false)
+const currentCourse = ref(null)
+const enrolledStudents = ref([])
+const studentsLoading = ref(false)
 
 const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
@@ -218,25 +244,42 @@ const getCourseStyle = (section, dayIndex) => {
   return {}
 }
 
-const fetchMyCourses = async () => {
+const fetchTeacherCourses = async () => {
   loading.value = true
   try {
-    const res = await getMyCourses()
+    const res = await getTeacherCourses()
     courses.value = res.data
   } catch (error) {
     console.error(error)
+    ElMessage.error('获取课表失败')
   } finally {
     loading.value = false
   }
 }
 
+const showCourseStudents = async (course) => {
+  if (!course) return
+  currentCourse.value = course
+  studentsDialogVisible.value = true
+  studentsLoading.value = true
+  try {
+    const res = await getEnrolledStudents(course.id)
+    enrolledStudents.value = res.data
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('获取学生列表失败')
+  } finally {
+    studentsLoading.value = false
+  }
+}
+
 onMounted(() => {
-  fetchMyCourses()
+  fetchTeacherCourses()
 })
 </script>
 
 <style scoped>
-.schedule {
+.teacher-schedule {
 }
 
 .card-header {
@@ -306,7 +349,7 @@ onMounted(() => {
   background-color: #667eea;
   color: white;
   border-radius: 4px;
-  padding: 8px;
+  padding: 6px;
   margin: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -324,19 +367,30 @@ onMounted(() => {
 .course-name {
   font-weight: 500;
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   word-break: break-all;
 }
 
-.course-teacher {
+.course-info {
+  display: flex;
+  justify-content: space-between;
   font-size: 12px;
   opacity: 0.9;
   margin-bottom: 2px;
 }
 
 .course-location {
-  font-size: 12px;
-  opacity: 0.8;
+  text-align: left;
+}
+
+.course-students {
+  text-align: right;
+}
+
+.course-hint {
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: center;
 }
 
 .legend {
@@ -350,6 +404,14 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.legend-item:hover {
+  background-color: #f5f7fa;
 }
 
 .legend-color {
@@ -368,7 +430,7 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.legend-teacher {
+.legend-students {
   color: #409eff;
   font-size: 12px;
 }

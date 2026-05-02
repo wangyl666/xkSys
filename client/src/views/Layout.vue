@@ -24,6 +24,7 @@
             </template>
             <el-menu-item index="/courses">课程列表</el-menu-item>
             <el-menu-item index="/course/create">发布课程</el-menu-item>
+            <el-menu-item index="/teacher-schedule">我的课表</el-menu-item>
           </el-sub-menu>
         </template>
 

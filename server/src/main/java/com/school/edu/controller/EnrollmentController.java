@@ -1,6 +1,7 @@
 package com.school.edu.controller;
 
 import com.school.edu.dto.CourseDTO;
+import com.school.edu.dto.UserDTO;
 import com.school.edu.service.EnrollmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,5 +37,11 @@ public class EnrollmentController {
             @AuthenticationPrincipal String username) {
         enrollmentService.dropCourse(courseId, username);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/course/{courseId}/students")
+    public ResponseEntity<List<UserDTO>> getEnrolledStudents(@PathVariable Long courseId) {
+        List<UserDTO> students = enrollmentService.getEnrolledStudents(courseId);
+        return ResponseEntity.ok(students);
     }
 }

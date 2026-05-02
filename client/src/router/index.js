@@ -39,6 +39,12 @@ const routes = [
         meta: { title: '编辑课程', roles: ['TEACHER'] }
       },
       {
+        path: 'teacher-schedule',
+        name: 'TeacherSchedule',
+        component: () => import('@/views/teacher/TeacherSchedule.vue'),
+        meta: { title: '我的课表', roles: ['TEACHER'] }
+      },
+      {
         path: 'select-courses',
         name: 'SelectCourses',
         component: () => import('@/views/student/SelectCourses.vue'),
