@@ -1,6 +1,8 @@
 package com.school.edu.controller;
 
 import com.school.edu.dto.CourseDTO;
+import com.school.edu.entity.User;
+import com.school.edu.repository.UserRepository;
 import com.school.edu.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,9 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
     public ResponseEntity<List<CourseDTO>> getAllCourses() {
         List<CourseDTO> courses = courseService.getAllCourses();
@@ -27,12 +32,15 @@ public class CourseController {
             @AuthenticationPrincipal String username,
             @RequestParam(required = false) Long teacherId) {
         
-        List<CourseDTO> courses;
-        if (teacherId != null) {
-            courses = courseService.getTeacherCourses(teacherId);
-        } else {
-            courses = courseService.getTeacherCourses(null);
+        Long targetTeacherId = teacherId;
+        
+        if (targetTeacherId == null) {
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+            targetTeacherId = currentUser.getId();
         }
+        
+        List<CourseDTO> courses = courseService.getTeacherCourses(targetTeacherId);
         return ResponseEntity.ok(courses);
     }
 
