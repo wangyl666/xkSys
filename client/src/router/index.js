@@ -51,6 +51,12 @@ const routes = [
         meta: { title: '考勤管理', roles: ['TEACHER'] }
       },
       {
+        path: 'homework-management',
+        name: 'HomeworkManagement',
+        component: () => import('@/views/teacher/HomeworkManagement.vue'),
+        meta: { title: '作业管理', roles: ['TEACHER'] }
+      },
+      {
         path: 'select-courses',
         name: 'SelectCourses',
         component: () => import('@/views/student/SelectCourses.vue'),
@@ -73,6 +79,12 @@ const routes = [
         name: 'StudentAttendance',
         component: () => import('@/views/student/StudentAttendance.vue'),
         meta: { title: '我的考勤', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student-homework',
+        name: 'StudentHomework',
+        component: () => import('@/views/student/StudentHomework.vue'),
+        meta: { title: '我的作业', roles: ['STUDENT'] }
       }
     ]
   }

@@ -30,6 +30,10 @@
             <el-icon><Document /></el-icon>
             <span>考勤管理</span>
           </el-menu-item>
+          <el-menu-item index="/homework-management">
+            <el-icon><Edit /></el-icon>
+            <span>作业管理</span>
+          </el-menu-item>
         </template>
 
         <template v-else-if="userStore.isStudent">
@@ -45,6 +49,10 @@
           <el-menu-item index="/student-attendance">
             <el-icon><Document /></el-icon>
             <span>我的考勤</span>
+          </el-menu-item>
+          <el-menu-item index="/student-homework">
+            <el-icon><Edit /></el-icon>
+            <span>我的作业</span>
           </el-menu-item>
         </template>
       </el-menu>
