@@ -6,7 +6,9 @@ import com.school.edu.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,15 +154,14 @@ public class AttendanceAppealService {
     }
 
     private String formatDayOfWeek(Course.DayOfWeek dayOfWeek) {
-        final var map = java.util.Map.of(
-            Course.DayOfWeek.MONDAY, "周一",
-            Course.DayOfWeek.TUESDAY, "周二",
-            Course.DayOfWeek.WEDNESDAY, "周三",
-            Course.DayOfWeek.THURSDAY, "周四",
-            Course.DayOfWeek.FRIDAY, "周五",
-            Course.DayOfWeek.SATURDAY, "周六",
-            Course.DayOfWeek.SUNDAY, "周日"
-        );
+        Map<Course.DayOfWeek, String> map = new HashMap<>();
+        map.put(Course.DayOfWeek.MONDAY, "周一");
+        map.put(Course.DayOfWeek.TUESDAY, "周二");
+        map.put(Course.DayOfWeek.WEDNESDAY, "周三");
+        map.put(Course.DayOfWeek.THURSDAY, "周四");
+        map.put(Course.DayOfWeek.FRIDAY, "周五");
+        map.put(Course.DayOfWeek.SATURDAY, "周六");
+        map.put(Course.DayOfWeek.SUNDAY, "周日");
         return map.getOrDefault(dayOfWeek, dayOfWeek.name());
     }
 }
