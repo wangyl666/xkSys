@@ -123,10 +123,10 @@
             <el-table-column label="操作" width="200" fixed="right">
               <template #default="{ row }">
                 <template v-if="row.status === 'PENDING'">
-                  <el-button type="success" link @click="reviewAppeal(row, true)">
+                  <el-button type="success" link @click="openReviewDialog(row, true)">
                     通过
                   </el-button>
-                  <el-button type="danger" link @click="reviewAppeal(row, false)">
+                  <el-button type="danger" link @click="openReviewDialog(row, false)">
                     拒绝
                   </el-button>
                 </template>
@@ -471,7 +471,7 @@ const submitUpdateStatus = async () => {
   }
 }
 
-const reviewAppeal = (row, approved) => {
+const openReviewDialog = (row, approved) => {
   currentAppeal.value = row
   reviewAction.value = approved
   reviewComment.value = ''
