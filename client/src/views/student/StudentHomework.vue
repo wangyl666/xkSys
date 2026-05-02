@@ -207,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getStudentHomeworks, submitHomework as submitHomeworkApi, getMySubmission } from '@/api/homework'
 import { getMyCourses } from '@/api/enrollments'
@@ -227,6 +227,10 @@ const submitForm = ref({
   content: ''
 })
 const submitting = ref(false)
+
+const currentTime = ref(new Date())
+let refreshTimer = null
+let timeUpdateTimer = null
 
 const isViewOnly = computed(() => {
   if (!currentSubmission.value) return false
@@ -290,12 +294,12 @@ const formatDateTime = (date) => {
 
 const isExpired = (deadline) => {
   if (!deadline) return false
-  return new Date() > new Date(deadline)
+  return currentTime.value > new Date(deadline)
 }
 
 const getTimeType = (deadline) => {
   if (!deadline) return 'info'
-  const now = new Date()
+  const now = currentTime.value
   const deadlineTime = new Date(deadline)
   const diff = deadlineTime - now
   
@@ -307,7 +311,7 @@ const getTimeType = (deadline) => {
 
 const getRemainingTime = (deadline) => {
   if (!deadline) return '-'
-  const now = new Date()
+  const now = currentTime.value
   const deadlineTime = new Date(deadline)
   const diff = deadlineTime - now
   
@@ -402,6 +406,25 @@ const submitHomework = async () => {
 onMounted(() => {
   fetchCourses()
   fetchHomeworks()
+  
+  timeUpdateTimer = setInterval(() => {
+    currentTime.value = new Date()
+  }, 1000)
+  
+  refreshTimer = setInterval(() => {
+    fetchHomeworks()
+  }, 60000)
+})
+
+onUnmounted(() => {
+  if (timeUpdateTimer) {
+    clearInterval(timeUpdateTimer)
+    timeUpdateTimer = null
+  }
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 

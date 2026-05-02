@@ -312,6 +312,10 @@ public class HomeworkService {
         dto.setCreatedAt(homework.getCreatedAt());
         dto.setUpdatedAt(homework.getUpdatedAt());
 
+        if (submission != null) {
+            dto.setMySubmission(toHomeworkSubmissionDTO(submission));
+        }
+
         return dto;
     }
 

@@ -22,4 +22,5 @@ public class HomeworkDTO {
     private Integer totalStudents;
     private Integer submittedCount;
     private Integer gradedCount;
+    private HomeworkSubmissionDTO mySubmission;
 }
