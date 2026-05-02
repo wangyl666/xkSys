@@ -209,7 +209,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getStudentHomeworks, submitHomework, getMySubmission } from '@/api/homework'
+import { getStudentHomeworks, submitHomework as submitHomeworkApi, getMySubmission } from '@/api/homework'
 import { getMyCourses } from '@/api/enrollments'
 
 const activeTab = ref('pending')
@@ -384,7 +384,7 @@ const submitHomework = async () => {
   
   submitting.value = true
   try {
-    await submitHomework(currentHomework.value.id, {
+    await submitHomeworkApi(currentHomework.value.id, {
       content: submitForm.value.content,
       fileUrl: null
     })
