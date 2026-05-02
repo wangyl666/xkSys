@@ -51,7 +51,7 @@
                         <span class="course-location">{{ getCourseAt(section, dayIndex)?.location }}</span>
                         <span class="course-students">{{ getCourseAt(section, dayIndex)?.enrolledStudents }}/{{ getCourseAt(section, dayIndex)?.maxStudents }}</span>
                       </div>
-                      <div class="course-hint">点击查看学生</div>
+                      <div class="course-hint">点击查看学生并考勤</div>
                     </div>
                   </template>
                 </td>
@@ -91,14 +91,54 @@
 
     <el-dialog
       v-model="studentsDialogVisible"
-      :title="`${currentCourse?.courseName} - 选课学生列表`"
-      width="600px"
+      :title="`${currentCourse?.courseName} - 学生列表与考勤`"
+      width="900px"
     >
-      <el-table :data="enrolledStudents" v-loading="studentsLoading" stripe>
+      <div class="attendance-header" style="margin-bottom: 16px">
+        <el-form :inline="true" :model="attendanceForm">
+          <el-form-item label="考勤日期">
+            <el-date-picker
+              v-model="attendanceForm.attendanceDate"
+              type="date"
+              placeholder="选择日期"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              :disabled-date="disabledDate"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="loadTodayAttendance">
+              <el-icon><Search /></el-icon>
+              查询今日考勤
+            </el-button>
+            <el-button type="success" @click="saveAttendance" :loading="attendanceSaving">
+              <el-icon><Check /></el-icon>
+              保存考勤
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <el-table :data="enrolledStudents" v-loading="studentsLoading" stripe style="width: 100%">
         <el-table-column prop="name" label="姓名" width="120" />
         <el-table-column prop="username" label="学号" width="150" />
         <el-table-column prop="department" label="院系" />
-        <el-table-column prop="email" label="邮箱" />
+        <el-table-column label="考勤状态" width="150">
+          <template #default="{ row }">
+            <el-radio-group v-model="row.attendanceStatus" @change="handleAttendanceChange(row)">
+              <el-radio value="PRESENT">出勤</el-radio>
+              <el-radio value="ABSENT">缺勤</el-radio>
+              <el-radio value="LATE">迟到</el-radio>
+            </el-radio-group>
+          </template>
+        </el-table-column>
+        <el-table-column label="今日状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="getAttendanceTagType(row.todayStatus)">
+              {{ getAttendanceStatusText(row.todayStatus) }}
+            </el-tag>
+          </template>
+        </el-table-column>
       </el-table>
       <el-empty v-if="!studentsLoading && enrolledStudents.length === 0" description="暂无学生选课" />
       <template #footer>
@@ -109,10 +149,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getTeacherCourses } from '@/api/courses'
 import { getEnrolledStudents } from '@/api/enrollments'
+import { batchCreateAttendance, getCourseAttendancesByDate } from '@/api/attendance'
 
 const courses = ref([])
 const loading = ref(false)
@@ -120,6 +161,11 @@ const studentsDialogVisible = ref(false)
 const currentCourse = ref(null)
 const enrolledStudents = ref([])
 const studentsLoading = ref(false)
+const attendanceSaving = ref(false)
+
+const attendanceForm = ref({
+  attendanceDate: new Date().toISOString().split('T')[0]
+})
 
 const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
@@ -229,6 +275,30 @@ const getCourseStyle = (section, dayIndex) => {
   return {}
 }
 
+const getAttendanceTagType = (status) => {
+  const map = {
+    PRESENT: 'success',
+    ABSENT: 'danger',
+    LATE: 'warning',
+    EXCUSED: 'info'
+  }
+  return map[status] || ''
+}
+
+const getAttendanceStatusText = (status) => {
+  const map = {
+    PRESENT: '出勤',
+    ABSENT: '缺勤',
+    LATE: '迟到',
+    EXCUSED: '事假'
+  }
+  return map[status] || '未考勤'
+}
+
+const disabledDate = (time) => {
+  return time.getTime() > Date.now()
+}
+
 const fetchTeacherCourses = async () => {
   loading.value = true
   try {
@@ -246,15 +316,97 @@ const showCourseStudents = async (course) => {
   if (!course) return
   currentCourse.value = course
   studentsDialogVisible.value = true
+  attendanceForm.value.attendanceDate = new Date().toISOString().split('T')[0]
+  await loadStudents()
+  await loadTodayAttendance()
+}
+
+const loadStudents = async () => {
   studentsLoading.value = true
   try {
-    const res = await getEnrolledStudents(course.id)
-    enrolledStudents.value = res.data
+    const res = await getEnrolledStudents(currentCourse.value.id)
+    enrolledStudents.value = res.data.map(student => ({
+      ...student,
+      attendanceStatus: 'PRESENT',
+      todayStatus: null
+    }))
   } catch (error) {
     console.error(error)
     ElMessage.error('获取学生列表失败')
   } finally {
     studentsLoading.value = false
+  }
+}
+
+const loadTodayAttendance = async () => {
+  if (!currentCourse.value || !attendanceForm.value.attendanceDate) return
+
+  try {
+    const res = await getCourseAttendancesByDate(
+      currentCourse.value.id,
+      attendanceForm.value.attendanceDate
+    )
+
+    const todayAttendances = res.data
+
+    enrolledStudents.value = enrolledStudents.value.map(student => {
+      const attendance = todayAttendances.find(a => a.studentId === student.id)
+      if (attendance) {
+        return {
+          ...student,
+          attendanceStatus: attendance.status,
+          todayStatus: attendance.status
+        }
+      }
+      return {
+        ...student,
+        attendanceStatus: 'PRESENT',
+        todayStatus: null
+      }
+    })
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('获取今日考勤记录失败')
+  }
+}
+
+const handleAttendanceChange = (row) => {
+  row.todayStatus = null
+}
+
+const saveAttendance = async () => {
+  if (!currentCourse.value || !attendanceForm.value.attendanceDate) {
+    ElMessage.warning('请选择课程和日期')
+    return
+  }
+
+  attendanceSaving.value = true
+  try {
+    const presentStudentIds = []
+    const absentStudentIds = []
+
+    enrolledStudents.value.forEach(student => {
+      if (student.attendanceStatus === 'PRESENT') {
+        presentStudentIds.push(student.id)
+      } else if (student.attendanceStatus === 'ABSENT') {
+        absentStudentIds.push(student.id)
+      }
+    })
+
+    await batchCreateAttendance({
+      courseId: currentCourse.value.id,
+      attendanceDate: attendanceForm.value.attendanceDate,
+      presentStudentIds,
+      absentStudentIds
+    })
+
+    ElMessage.success('考勤保存成功！缺勤学生将收到通知')
+    await loadTodayAttendance()
+  } catch (error) {
+    console.error(error)
+    ElMessage.error(error.response?.data?.message || '保存考勤失败')
+  } finally {
+    attendanceSaving.value = false
   }
 }
 
@@ -418,5 +570,11 @@ onMounted(() => {
 .legend-students {
   color: #409eff;
   font-size: 12px;
+}
+
+.attendance-header {
+  background-color: #f5f7fa;
+  padding: 16px;
+  border-radius: 4px;
 }
 </style>

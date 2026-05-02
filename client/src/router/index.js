@@ -45,6 +45,12 @@ const routes = [
         meta: { title: '我的课表', roles: ['TEACHER'] }
       },
       {
+        path: 'attendance-management',
+        name: 'AttendanceManagement',
+        component: () => import('@/views/teacher/AttendanceManagement.vue'),
+        meta: { title: '考勤管理', roles: ['TEACHER'] }
+      },
+      {
         path: 'select-courses',
         name: 'SelectCourses',
         component: () => import('@/views/student/SelectCourses.vue'),
@@ -61,6 +67,12 @@ const routes = [
         name: 'Schedule',
         component: () => import('@/views/student/Schedule.vue'),
         meta: { title: '我的课表', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student-attendance',
+        name: 'StudentAttendance',
+        component: () => import('@/views/student/StudentAttendance.vue'),
+        meta: { title: '我的考勤', roles: ['STUDENT'] }
       }
     ]
   }

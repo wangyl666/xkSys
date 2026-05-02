@@ -26,6 +26,10 @@
             <el-menu-item index="/course/create">发布课程</el-menu-item>
             <el-menu-item index="/teacher-schedule">我的课表</el-menu-item>
           </el-sub-menu>
+          <el-menu-item index="/attendance-management">
+            <el-icon><Document /></el-icon>
+            <span>考勤管理</span>
+          </el-menu-item>
         </template>
 
         <template v-else-if="userStore.isStudent">
@@ -38,6 +42,10 @@
             <el-menu-item index="/my-courses">我的课程</el-menu-item>
             <el-menu-item index="/schedule">我的课表</el-menu-item>
           </el-sub-menu>
+          <el-menu-item index="/student-attendance">
+            <el-icon><Document /></el-icon>
+            <span>我的考勤</span>
+          </el-menu-item>
         </template>
       </el-menu>
     </el-aside>
