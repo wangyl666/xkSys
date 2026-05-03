@@ -232,7 +232,7 @@
                 type="primary"
                 :disabled="!hasUnscoredSubjective && currentSubmission.status !== 'GRADED'"
                 :loading="completing"
-                @click="completeGrading"
+                @click="handleCompleteGrading"
               >
                 完成评分
               </el-button>
@@ -361,7 +361,7 @@ const saveSubjectiveScore = async (answer) => {
   }
 }
 
-const completeGrading = async () => {
+const handleCompleteGrading = async () => {
   try {
     await ElMessageBox.confirm('确定要完成评分吗？完成后将计算总分并标记为已评分。', '确认完成', {
       confirmButtonText: '确定',
