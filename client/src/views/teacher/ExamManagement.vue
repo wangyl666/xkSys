@@ -339,7 +339,6 @@ import {
   getExamById,
   getExamSubmissions,
   createExam,
-  updateExam,
   publishExam as apiPublishExam,
   publishScores as apiPublishScores,
   getExamStatuses
