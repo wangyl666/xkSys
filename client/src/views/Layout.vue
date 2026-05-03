@@ -34,6 +34,14 @@
             <el-icon><Edit /></el-icon>
             <span>作业管理</span>
           </el-menu-item>
+          <el-menu-item index="/question-bank">
+            <el-icon><Collection /></el-icon>
+            <span>题库管理</span>
+          </el-menu-item>
+          <el-menu-item index="/exam-paper">
+            <el-icon><Tickets /></el-icon>
+            <span>试卷管理</span>
+          </el-menu-item>
         </template>
 
         <template v-else-if="userStore.isStudent">
@@ -157,7 +165,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getUnreadNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '@/api/notifications'
-import { Bell, Close, Warning, Clock, Document, User, Check } from '@element-plus/icons-vue'
+import { Bell, Close, Warning, Clock, Document, User, Check, Collection, Tickets } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()

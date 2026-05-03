@@ -58,6 +58,18 @@ const routes = [
         meta: { title: '作业管理', roles: ['TEACHER'] }
       },
       {
+        path: 'question-bank',
+        name: 'QuestionBankManagement',
+        component: () => import('@/views/teacher/QuestionBankManagement.vue'),
+        meta: { title: '题库管理', roles: ['TEACHER'] }
+      },
+      {
+        path: 'exam-paper',
+        name: 'ExamPaperManagement',
+        component: () => import('@/views/teacher/ExamPaperManagement.vue'),
+        meta: { title: '试卷管理', roles: ['TEACHER'] }
+      },
+      {
         path: 'select-courses',
         name: 'SelectCourses',
         component: () => import('@/views/student/SelectCourses.vue'),
