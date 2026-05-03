@@ -397,6 +397,11 @@ const initExam = async () => {
         startedAt.value = new Date(submissionRes.data.startedAt)
         const elapsedSeconds = Math.floor((Date.now() - startedAt.value.getTime()) / 1000)
         remainingSeconds.value = Math.max(0, exam.value.duration * 60 - elapsedSeconds)
+      } else {
+        const startRes = await startExam(examId.value)
+        submissionId.value = startRes.data.id
+        startedAt.value = new Date()
+        remainingSeconds.value = exam.value.duration * 60
       }
     } else {
       const startRes = await startExam(examId.value)

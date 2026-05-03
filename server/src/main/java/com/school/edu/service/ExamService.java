@@ -582,6 +582,7 @@ public class ExamService {
     private ExamPaperQuestionDTO toExamPaperQuestionDTO(ExamPaperQuestion eq) {
         ExamPaperQuestionDTO dto = new ExamPaperQuestionDTO();
         dto.setId(eq.getId());
+        dto.setExamPaperQuestionId(eq.getId());
         dto.setExamPaperId(eq.getExamPaper().getId());
         dto.setQuestionId(eq.getQuestion().getId());
         dto.setSortOrder(eq.getSortOrder());

@@ -6,6 +6,7 @@ import com.school.edu.entity.Question;
 @Data
 public class ExamPaperQuestionDTO {
     private Long id;
+    private Long examPaperQuestionId;
     private Long examPaperId;
     private Long questionId;
     private Integer sortOrder;

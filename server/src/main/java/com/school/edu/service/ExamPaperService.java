@@ -143,18 +143,16 @@ public class ExamPaperService {
 
         ExamPaper savedExamPaper = examPaperRepository.save(examPaper);
 
-        List<ExamPaperQuestion> paperQuestions = new ArrayList<>();
         for (int i = 0; i < selectedQuestions.size(); i++) {
             ExamPaperQuestion eq = new ExamPaperQuestion();
             eq.setExamPaper(savedExamPaper);
             eq.setQuestion(selectedQuestions.get(i));
             eq.setSortOrder(i + 1);
             eq.setScore(questionScores.get(selectedQuestions.get(i).getId()));
-            paperQuestions.add(eq);
+            savedExamPaper.getQuestions().add(eq);
         }
 
-        savedExamPaper.setQuestions(paperQuestions);
-        savedExamPaper.setQuestionCount(paperQuestions.size());
+        savedExamPaper.setQuestionCount(savedExamPaper.getQuestions().size());
         savedExamPaper = examPaperRepository.save(savedExamPaper);
 
         return toExamPaperDTO(savedExamPaper);
@@ -190,12 +188,11 @@ public class ExamPaperService {
 
         if (examPaperDTO.getQuestions() != null) {
             examPaper.getQuestions().clear();
-            examPaperQuestionRepository.flush();
 
             if (!examPaperDTO.getQuestions().isEmpty()) {
                 List<ExamPaperQuestion> paperQuestions = buildExamPaperQuestions(
                         examPaper, examPaperDTO.getQuestions());
-                examPaper.setQuestions(paperQuestions);
+                examPaper.getQuestions().addAll(paperQuestions);
                 examPaper.setQuestionCount(paperQuestions.size());
             } else {
                 examPaper.setQuestionCount(0);
@@ -324,6 +321,7 @@ public class ExamPaperService {
     private ExamPaperQuestionDTO toExamPaperQuestionDTO(ExamPaperQuestion eq) {
         ExamPaperQuestionDTO dto = new ExamPaperQuestionDTO();
         dto.setId(eq.getId());
+        dto.setExamPaperQuestionId(eq.getId());
         dto.setExamPaperId(eq.getExamPaper().getId());
         dto.setQuestionId(eq.getQuestion().getId());
         dto.setSortOrder(eq.getSortOrder());
