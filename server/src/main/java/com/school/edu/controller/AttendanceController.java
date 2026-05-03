@@ -33,16 +33,28 @@ public class AttendanceController {
         
         Long courseId = Long.valueOf(request.get("courseId").toString());
         LocalDate attendanceDate = LocalDate.parse(request.get("attendanceDate").toString());
-        @SuppressWarnings("unchecked")
-        List<Long> presentStudentIds = (List<Long>) request.get("presentStudentIds");
-        @SuppressWarnings("unchecked")
-        List<Long> absentStudentIds = (List<Long>) request.get("absentStudentIds");
-        @SuppressWarnings("unchecked")
-        List<Long> lateStudentIds = (List<Long>) request.get("lateStudentIds");
+        
+        List<Long> presentStudentIds = convertToLongList((List<?>) request.get("presentStudentIds"));
+        List<Long> absentStudentIds = convertToLongList((List<?>) request.get("absentStudentIds"));
+        List<Long> lateStudentIds = convertToLongList((List<?>) request.get("lateStudentIds"));
 
         List<AttendanceDTO> attendances = attendanceService.batchCreateAttendance(
                 courseId, attendanceDate, presentStudentIds, absentStudentIds, lateStudentIds, username);
         return ResponseEntity.ok(attendances);
+    }
+    
+    private List<Long> convertToLongList(List<?> list) {
+        if (list == null || list.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return list.stream()
+                .map(obj -> {
+                    if (obj instanceof Number) {
+                        return ((Number) obj).longValue();
+                    }
+                    return Long.valueOf(obj.toString());
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/teacher")
