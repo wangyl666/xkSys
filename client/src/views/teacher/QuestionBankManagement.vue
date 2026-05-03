@@ -111,27 +111,60 @@
             placeholder="请输入题目内容"
           />
         </el-form-item>
-        <el-form-item label="选项" v-if="showOptions">
-          <el-input
-            v-model="questionForm.options"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入选项，多个选项用换行分隔&#10;例如：&#10;A. 选项1&#10;B. 选项2&#10;C. 选项3&#10;D. 选项4"
-          />
-          <div style="margin-top: 8px; color: #909399; font-size: 12px">
-            提示：每个选项占一行，格式如 "A. 选项内容"
+        <el-form-item label="选项" v-if="isSingleChoice || isMultipleChoice">
+          <div v-for="(option, index) in optionList" :key="index" class="option-item">
+            <div class="option-label">{{ String.fromCharCode(65 + index) }}.</div>
+            <el-input
+              v-model="option.content"
+              placeholder="请输入选项内容"
+              style="flex: 1"
+            />
+            <el-radio
+              v-if="isSingleChoice"
+              :value="String.fromCharCode(65 + index)"
+              v-model="singleChoiceAnswer"
+              style="margin-left: 10px"
+            >
+              正确
+            </el-radio>
+            <el-checkbox
+              v-if="isMultipleChoice"
+              :value="String.fromCharCode(65 + index)"
+              v-model="multipleChoiceAnswers"
+              style="margin-left: 10px"
+            >
+              正确
+            </el-checkbox>
+            <el-button
+              v-if="optionList.length > 2"
+              type="danger"
+              link
+              @click="removeOption(index)"
+              style="margin-left: 10px"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
           </div>
+          <el-button type="primary" link @click="addOption" style="margin-top: 10px">
+            <el-icon><CirclePlus /></el-icon>
+            添加选项
+          </el-button>
         </el-form-item>
-        <el-form-item label="正确答案" prop="answer">
+
+        <el-form-item label="正确答案" v-if="isTrueFalse">
+          <el-radio-group v-model="trueFalseAnswer">
+            <el-radio value="正确">正确</el-radio>
+            <el-radio value="错误">错误</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="正确答案" v-else-if="!isSingleChoice && !isMultipleChoice && !isTrueFalse" prop="answer">
           <el-input
             v-model="questionForm.answer"
             type="textarea"
             :rows="2"
             placeholder="请输入正确答案"
           />
-          <div style="margin-top: 8px; color: #909399; font-size: 12px" v-if="showOptions">
-            提示：单选题填如 "A"，多选题填如 "AB"，判断题填如 "正确" 或 "错误"
-          </div>
         </el-form-item>
         <el-row :gutter="20">
           <el-col :span="12">
@@ -296,7 +329,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, UploadFilled } from '@element-plus/icons-vue'
+import { Plus, Upload, UploadFilled, CirclePlus, Delete } from '@element-plus/icons-vue'
 import { getTeacherCourses } from '@/api/courses'
 import {
   getTeacherQuestions,
@@ -357,9 +390,90 @@ const importPreview = ref([])
 const importing = ref(false)
 const importFile = ref(null)
 
+const optionList = ref([])
+const singleChoiceAnswer = ref('')
+const multipleChoiceAnswers = ref([])
+const trueFalseAnswer = ref('正确')
+
+const isSingleChoice = computed(() => questionForm.value.type === 'SINGLE_CHOICE')
+const isMultipleChoice = computed(() => questionForm.value.type === 'MULTIPLE_CHOICE')
+const isTrueFalse = computed(() => questionForm.value.type === 'TRUE_FALSE')
+
 const showOptions = computed(() => {
   return ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(questionForm.value.type)
 })
+
+const initOptionList = () => {
+  optionList.value = [
+    { content: '' },
+    { content: '' },
+    { content: '' },
+    { content: '' }
+  ]
+  singleChoiceAnswer.value = ''
+  multipleChoiceAnswers.value = []
+  trueFalseAnswer.value = '正确'
+}
+
+const parseOptionsFromString = (optionsStr, answer) => {
+  if (!optionsStr) {
+    initOptionList()
+    return
+  }
+  
+  const lines = optionsStr.split('\n').filter(line => line.trim())
+  optionList.value = lines.map(line => {
+    const match = line.match(/^([A-Z])[.、]\s*(.+)$/)
+    if (match) {
+      return { content: match[2] }
+    }
+    return { content: line.trim() }
+  })
+  
+  if (optionList.value.length < 2) {
+    initOptionList()
+  }
+  
+  if (answer) {
+    singleChoiceAnswer.value = ''
+    multipleChoiceAnswers.value = []
+    trueFalseAnswer.value = '正确'
+    
+    if (isSingleChoice.value) {
+      singleChoiceAnswer.value = answer.toUpperCase()
+    } else if (isMultipleChoice.value) {
+      multipleChoiceAnswers.value = answer.toUpperCase().split('').filter(c => /[A-Z]/.test(c))
+    } else if (isTrueFalse.value) {
+      trueFalseAnswer.value = answer
+    }
+  }
+}
+
+const buildOptionsString = () => {
+  return optionList.value
+    .map((opt, index) => `${String.fromCharCode(65 + index)}. ${opt.content}`)
+    .join('\n')
+}
+
+const addOption = () => {
+  if (optionList.value.length < 26) {
+    optionList.value.push({ content: '' })
+  }
+}
+
+const removeOption = (index) => {
+  if (optionList.value.length > 2) {
+    const removedLabel = String.fromCharCode(65 + index)
+    optionList.value.splice(index, 1)
+    
+    if (isSingleChoice.value && singleChoiceAnswer.value === removedLabel) {
+      singleChoiceAnswer.value = ''
+    }
+    if (isMultipleChoice.value) {
+      multipleChoiceAnswers.value = multipleChoiceAnswers.value.filter(a => a !== removedLabel)
+    }
+  }
+}
 
 const getDifficultyType = (difficulty) => {
   const map = {
@@ -416,6 +530,17 @@ watch(filterCourseId, () => {
   fetchQuestions()
 })
 
+watch(() => questionForm.value.type, (newType) => {
+  if (newType && ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(newType)) {
+    if (optionList.value.length === 0) {
+      initOptionList()
+    }
+  }
+  if (newType === 'TRUE_FALSE') {
+    trueFalseAnswer.value = '正确'
+  }
+})
+
 const openCreateDialog = () => {
   isEditing.value = false
   currentQuestion.value = null
@@ -431,6 +556,7 @@ const openCreateDialog = () => {
     explanation: '',
     isPublic: false
   }
+  initOptionList()
   questionDialogVisible.value = true
 }
 
@@ -449,6 +575,7 @@ const editQuestion = (row) => {
     explanation: row.explanation || '',
     isPublic: row.isPublic || false
   }
+  parseOptionsFromString(row.options || '', row.answer)
   questionDialogVisible.value = true
 }
 
@@ -463,44 +590,102 @@ const viewQuestion = async (row) => {
   }
 }
 
-const submitQuestion = async () => {
-  if (!questionFormRef.value) return
+const prepareQuestionData = () => {
+  let options = ''
+  let answer = questionForm.value.answer
 
-  await questionFormRef.value.validate(async (valid) => {
-    if (!valid) return
+  if (isSingleChoice.value) {
+    options = buildOptionsString()
+    answer = singleChoiceAnswer.value
+  } else if (isMultipleChoice.value) {
+    options = buildOptionsString()
+    answer = multipleChoiceAnswers.value.slice().sort().join('')
+  } else if (isTrueFalse.value) {
+    answer = trueFalseAnswer.value
+  }
 
-    submitting.value = true
-    try {
-      const data = {
-        courseId: questionForm.value.courseId,
-        type: questionForm.value.type,
-        content: questionForm.value.content,
-        options: questionForm.value.options,
-        answer: questionForm.value.answer,
-        score: questionForm.value.score,
-        difficulty: questionForm.value.difficulty,
-        tag: questionForm.value.tag,
-        explanation: questionForm.value.explanation,
-        isPublic: questionForm.value.isPublic
-      }
+  return {
+    courseId: questionForm.value.courseId,
+    type: questionForm.value.type,
+    content: questionForm.value.content,
+    options: options,
+    answer: answer,
+    score: questionForm.value.score,
+    difficulty: questionForm.value.difficulty,
+    tag: questionForm.value.tag,
+    explanation: questionForm.value.explanation,
+    isPublic: questionForm.value.isPublic
+  }
+}
 
-      if (isEditing.value && currentQuestion.value) {
-        await updateQuestion(currentQuestion.value.id, data)
-        ElMessage.success('更新成功')
-      } else {
-        await createQuestion(data)
-        ElMessage.success('创建成功')
-      }
+const validateQuestionForm = () => {
+  if (!questionForm.value.type) {
+    ElMessage.warning('请选择题目类型')
+    return false
+  }
+  if (!questionForm.value.content?.trim()) {
+    ElMessage.warning('请输入题目内容')
+    return false
+  }
 
-      questionDialogVisible.value = false
-      fetchQuestions()
-    } catch (error) {
-      console.error(error)
-      ElMessage.error(error.response?.data?.message || '操作失败')
-    } finally {
-      submitting.value = false
+  if (isSingleChoice.value) {
+    const hasEmptyOption = optionList.value.some(opt => !opt.content?.trim())
+    if (hasEmptyOption) {
+      ElMessage.warning('请填写所有选项内容')
+      return false
     }
-  })
+    if (!singleChoiceAnswer.value) {
+      ElMessage.warning('请选择正确答案')
+      return false
+    }
+  } else if (isMultipleChoice.value) {
+    const hasEmptyOption = optionList.value.some(opt => !opt.content?.trim())
+    if (hasEmptyOption) {
+      ElMessage.warning('请填写所有选项内容')
+      return false
+    }
+    if (multipleChoiceAnswers.value.length === 0) {
+      ElMessage.warning('请至少选择一个正确答案')
+      return false
+    }
+  } else if (isTrueFalse.value) {
+    if (!trueFalseAnswer.value) {
+      ElMessage.warning('请选择正确答案')
+      return false
+    }
+  } else {
+    if (!questionForm.value.answer?.trim()) {
+      ElMessage.warning('请输入正确答案')
+      return false
+    }
+  }
+
+  return true
+}
+
+const submitQuestion = async () => {
+  if (!validateQuestionForm()) return
+
+  submitting.value = true
+  try {
+    const data = prepareQuestionData()
+
+    if (isEditing.value && currentQuestion.value) {
+      await updateQuestion(currentQuestion.value.id, data)
+      ElMessage.success('更新成功')
+    } else {
+      await createQuestion(data)
+      ElMessage.success('创建成功')
+    }
+
+    questionDialogVisible.value = false
+    fetchQuestions()
+  } catch (error) {
+    console.error(error)
+    ElMessage.error(error.response?.data?.message || '操作失败')
+  } finally {
+    submitting.value = false
+  }
 }
 
 const deleteQuestion = async (row) => {
@@ -525,7 +710,8 @@ const deleteQuestion = async (row) => {
 const handleFileChange = (file) => {
   importFile.value = file.raw
   importFileList.value = [file]
-  openImportDialog()
+  importDialogVisible.value = true
+  parseFileForPreview(file.raw)
 }
 
 const openImportDialog = () => {
@@ -664,5 +850,22 @@ onMounted(() => {
 
 :deep(.el-tabs__content) {
   padding-top: 16px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.option-label {
+  width: 30px;
+  font-weight: 600;
+  color: #606266;
+  flex-shrink: 0;
+}
+
+:deep(.option-item .el-input__wrapper) {
+  border-radius: 6px;
 }
 </style>

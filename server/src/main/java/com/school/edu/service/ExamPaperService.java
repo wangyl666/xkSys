@@ -64,10 +64,11 @@ public class ExamPaperService {
         examPaper.setTeacher(teacher);
         examPaper.setTitle(examPaperDTO.getTitle());
         examPaper.setDescription(examPaperDTO.getDescription());
-        examPaper.setTotalScore(examPaperDTO.getTotalScore());
+        examPaper.setTotalScore(examPaperDTO.getTotalScore() != null ? examPaperDTO.getTotalScore() : 0.0);
         examPaper.setDuration(examPaperDTO.getDuration());
         examPaper.setStatus(ExamPaper.ExamPaperStatus.DRAFT);
         examPaper.setCreationMethod(ExamPaper.CreationMethod.MANUAL);
+        examPaper.setQuestionCount(examPaperDTO.getQuestions() != null ? examPaperDTO.getQuestions().size() : 0);
 
         if (examPaperDTO.getCourseId() != null) {
             Course course = courseRepository.findById(examPaperDTO.getCourseId())
@@ -75,17 +76,13 @@ public class ExamPaperService {
             examPaper.setCourse(course);
         }
 
-        ExamPaper savedExamPaper = examPaperRepository.save(examPaper);
-
         if (examPaperDTO.getQuestions() != null && !examPaperDTO.getQuestions().isEmpty()) {
             List<ExamPaperQuestion> paperQuestions = buildExamPaperQuestions(
-                    savedExamPaper, examPaperDTO.getQuestions());
-            savedExamPaper.setQuestions(paperQuestions);
-            savedExamPaper.setQuestionCount(paperQuestions.size());
-            savedExamPaper = examPaperRepository.save(savedExamPaper);
-        } else {
-            savedExamPaper.setQuestionCount(0);
+                    examPaper, examPaperDTO.getQuestions());
+            examPaper.setQuestions(paperQuestions);
         }
+
+        ExamPaper savedExamPaper = examPaperRepository.save(examPaper);
 
         return toExamPaperDTO(savedExamPaper);
     }
