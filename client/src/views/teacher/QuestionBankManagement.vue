@@ -303,7 +303,7 @@ import {
   getQuestionById,
   createQuestion,
   updateQuestion,
-  deleteQuestion,
+  deleteQuestion as deleteQuestionApi,
   getQuestionTypes,
   batchCreateQuestions
 } from '@/api/questions'
@@ -511,7 +511,7 @@ const deleteQuestion = async (row) => {
       type: 'warning'
     })
 
-    await deleteQuestion(row.id)
+    await deleteQuestionApi(row.id)
     ElMessage.success('删除成功')
     fetchQuestions()
   } catch (error) {
