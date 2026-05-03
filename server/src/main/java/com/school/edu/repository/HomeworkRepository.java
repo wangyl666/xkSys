@@ -25,6 +25,6 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
     @Query("SELECT h FROM Homework h JOIN FETCH h.course c WHERE h.status = 'PUBLISHED' AND h.enableReminder = true")
     List<Homework> findPublishedWithReminderEnabled();
 
-    @Query("SELECT h FROM Homework h JOIN FETCH h.course c WHERE h.status = 'PUBLISHED' AND h.deadline > :now AND h.enableReminder = true")
+    @Query("SELECT h FROM Homework h JOIN FETCH h.course c WHERE h.status = 'PUBLISHED' AND h.deadline > :now AND h.enableReminder = true AND h.reminderSent = false")
     List<Homework> findUpcomingWithReminderEnabled(LocalDateTime now);
 }

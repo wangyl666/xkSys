@@ -36,7 +36,7 @@ public class ScheduledTaskService {
         List<Homework> homeworks = homeworkRepository.findUpcomingWithReminderEnabled(now);
         
         for (Homework homework : homeworks) {
-            if (homework.getDeadline() == null || !homework.getEnableReminder()) {
+            if (homework.getDeadline() == null || !homework.getEnableReminder() || homework.getReminderSent()) {
                 continue;
             }
             
@@ -44,6 +44,8 @@ public class ScheduledTaskService {
             
             if (minutesUntilDeadline >= 0 && minutesUntilDeadline <= homework.getReminderMinutes()) {
                 sendHomeworkReminder(homework, minutesUntilDeadline);
+                homework.setReminderSent(true);
+                homeworkRepository.save(homework);
             }
         }
     }

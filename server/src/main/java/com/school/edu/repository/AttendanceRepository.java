@@ -30,6 +30,9 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     boolean existsByCourseIdAndAttendanceDateAndStudentId(Long courseId, LocalDate attendanceDate, Long studentId);
 
+    @Query("SELECT a FROM Attendance a WHERE a.course.id = :courseId AND a.attendanceDate = :attendanceDate AND a.student.id = :studentId")
+    java.util.Optional<Attendance> findByCourseIdAndDateAndStudentId(Long courseId, LocalDate attendanceDate, Long studentId);
+
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId AND a.status = 'ABSENT'")
     Long countAbsentByStudentId(Long studentId);
 }

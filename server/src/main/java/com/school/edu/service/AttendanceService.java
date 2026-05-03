@@ -114,11 +114,6 @@ public class AttendanceService {
                 .collect(Collectors.toList());
 
         for (User student : enrolledStudents) {
-            if (attendanceRepository.existsByCourseIdAndAttendanceDateAndStudentId(
-                    courseId, attendanceDate, student.getId())) {
-                continue;
-            }
-
             Attendance.AttendanceStatus status;
             if (presentStudentIds != null && presentStudentIds.contains(student.getId())) {
                 status = Attendance.AttendanceStatus.PRESENT;
@@ -127,24 +122,42 @@ public class AttendanceService {
             } else if (lateStudentIds != null && lateStudentIds.contains(student.getId())) {
                 status = Attendance.AttendanceStatus.LATE;
             } else {
-                status = Attendance.AttendanceStatus.ABSENT;
+                status = Attendance.AttendanceStatus.PRESENT;
             }
 
-            Attendance attendance = new Attendance();
-            attendance.setStudent(student);
-            attendance.setCourse(course);
-            attendance.setAttendanceDate(attendanceDate);
-            attendance.setStartSection(course.getStartSection());
-            attendance.setEndSection(course.getEndSection());
-            attendance.setStatus(status);
-            attendance.setCreatedBy(teacher);
+            java.util.Optional<Attendance> existingAttendanceOpt = attendanceRepository
+                    .findByCourseIdAndDateAndStudentId(courseId, attendanceDate, student.getId());
 
-            Attendance savedAttendance = attendanceRepository.save(attendance);
+            if (existingAttendanceOpt.isPresent()) {
+                Attendance existingAttendance = existingAttendanceOpt.get();
+                Attendance.AttendanceStatus oldStatus = existingAttendance.getStatus();
+                existingAttendance.setStatus(status);
+                Attendance savedAttendance = attendanceRepository.save(existingAttendance);
+                
+                if (oldStatus != Attendance.AttendanceStatus.ABSENT && oldStatus != Attendance.AttendanceStatus.LATE) {
+                    if (status == Attendance.AttendanceStatus.ABSENT) {
+                        createAbsentNotification(savedAttendance, course);
+                    } else if (status == Attendance.AttendanceStatus.LATE) {
+                        createLateNotification(savedAttendance, course);
+                    }
+                }
+            } else {
+                Attendance attendance = new Attendance();
+                attendance.setStudent(student);
+                attendance.setCourse(course);
+                attendance.setAttendanceDate(attendanceDate);
+                attendance.setStartSection(course.getStartSection());
+                attendance.setEndSection(course.getEndSection());
+                attendance.setStatus(status);
+                attendance.setCreatedBy(teacher);
 
-            if (status == Attendance.AttendanceStatus.ABSENT) {
-                createAbsentNotification(savedAttendance, course);
-            } else if (status == Attendance.AttendanceStatus.LATE) {
-                createLateNotification(savedAttendance, course);
+                Attendance savedAttendance = attendanceRepository.save(attendance);
+
+                if (status == Attendance.AttendanceStatus.ABSENT) {
+                    createAbsentNotification(savedAttendance, course);
+                } else if (status == Attendance.AttendanceStatus.LATE) {
+                    createLateNotification(savedAttendance, course);
+                }
             }
         }
 

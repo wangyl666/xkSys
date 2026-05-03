@@ -36,6 +36,9 @@ public class Homework {
     @Column(nullable = false)
     private Integer reminderMinutes = 3;
 
+    @Column(nullable = false)
+    private Boolean reminderSent = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private HomeworkStatus status = HomeworkStatus.DRAFT;

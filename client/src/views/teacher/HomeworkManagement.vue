@@ -217,14 +217,24 @@
     <el-dialog
       v-model="gradeDialogVisible"
       title="作业评分"
-      width="500px"
+      width="600px"
     >
       <el-descriptions :column="1" border size="small" v-if="currentSubmission">
         <el-descriptions-item label="学生">
           {{ currentSubmission.studentName }} ({{ currentSubmission.studentUsername }})
         </el-descriptions-item>
-        <el-descriptions-item label="提交内容" v-if="currentSubmission.content">
-          {{ currentSubmission.content }}
+        <el-descriptions-item label="提交内容" v-if="currentSubmission.content && currentSubmission.content.trim()">
+          <div style="white-space: pre-wrap; word-break: break-all;">
+            {{ currentSubmission.content }}
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交文件" v-if="currentSubmission.fileUrl">
+          <a :href="currentSubmission.fileUrl" target="_blank" style="color: #409eff; text-decoration: underline;">
+            点击查看提交的文件
+          </a>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交内容" v-if="(!currentSubmission.content || !currentSubmission.content.trim()) && !currentSubmission.fileUrl">
+          <span style="color: #909399;">学生未提交任何内容</span>
         </el-descriptions-item>
         <el-descriptions-item label="提交时间">
           {{ formatDateTime(currentSubmission.submittedAt) }}
@@ -276,8 +286,18 @@
             {{ getSubmissionStatusText(currentSubmission.status) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="提交内容" v-if="currentSubmission.content">
-          {{ currentSubmission.content }}
+        <el-descriptions-item label="提交内容" v-if="currentSubmission.content && currentSubmission.content.trim()">
+          <div style="white-space: pre-wrap; word-break: break-all;">
+            {{ currentSubmission.content }}
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交文件" v-if="currentSubmission.fileUrl">
+          <a :href="currentSubmission.fileUrl" target="_blank" style="color: #409eff; text-decoration: underline;">
+            点击查看提交的文件
+          </a>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交内容" v-if="(!currentSubmission.content || !currentSubmission.content.trim()) && !currentSubmission.fileUrl">
+          <span style="color: #909399;">学生未提交任何内容</span>
         </el-descriptions-item>
         <el-descriptions-item label="提交时间">
           {{ formatDateTime(currentSubmission.submittedAt) }}
