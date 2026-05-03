@@ -338,7 +338,9 @@ import {
   updateQuestion,
   deleteQuestion as deleteQuestionApi,
   getQuestionTypes,
-  batchCreateQuestions
+  batchCreateQuestions,
+  parsePreview,
+  importQuestions
 } from '@/api/questions'
 
 const activeTab = ref('list')
@@ -728,13 +730,15 @@ const handleImportFileChange = (file) => {
 const parseFileForPreview = async (file) => {
   importPreview.value = []
   
-  if (file.name.endsWith('.txt')) {
-    const text = await readTextFile(file)
-    const parsed = parseTextToQuestions(text)
-    importPreview.value = parsed
-  } else {
-    ElMessage.warning('当前仅支持 txt 格式预览，Word/PDF 解析将在后端处理')
-    importPreview.value = [{ type: 'SINGLE_CHOICE', content: '文件解析中...', answer: '（导入后可见）' }]
+  try {
+    const res = await parsePreview(file)
+    importPreview.value = res.data
+    if (res.data.length === 0) {
+      ElMessage.warning('未从文件中解析出任何题目')
+    }
+  } catch (error) {
+    console.error(error)
+    ElMessage.error(error.response?.data?.message || '文件解析失败')
   }
 }
 
@@ -803,20 +807,19 @@ const confirmImport = async () => {
     ElMessage.warning('没有可导入的题目')
     return
   }
+  if (!importFile.value) {
+    ElMessage.warning('请选择要导入的文件')
+    return
+  }
 
   importing.value = true
   try {
-    if (importFile.value && importFile.value.name.endsWith('.txt')) {
-      await batchCreateQuestions(importPreview.value)
-    } else {
-      ElMessage.warning('Word/PDF 文件导入需要后端解析服务，当前仅支持手动创建或 txt 文件导入')
-      importing.value = false
-      return
-    }
-    ElMessage.success(`成功导入 ${importPreview.value.length} 道题目`)
+    const res = await importQuestions(importFile.value, filterCourseId.value)
+    ElMessage.success(`成功导入 ${res.data.count} 道题目`)
     importDialogVisible.value = false
     importFileList.value = []
     importPreview.value = []
+    importFile.value = null
     fetchQuestions()
   } catch (error) {
     console.error(error)

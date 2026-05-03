@@ -3,11 +3,13 @@ package com.school.edu.controller;
 import com.school.edu.dto.QuestionDTO;
 import com.school.edu.entity.User;
 import com.school.edu.repository.UserRepository;
+import com.school.edu.service.FileParserService;
 import com.school.edu.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,9 @@ public class QuestionController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private FileParserService fileParserService;
 
     @GetMapping
     public ResponseEntity<List<QuestionDTO>> getTeacherQuestions(
@@ -105,5 +110,63 @@ public class QuestionController {
                 })
                 .collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(types);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Map<String, Object>> importQuestions(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "courseId", required = false) Long courseId,
+            @AuthenticationPrincipal String username) {
+        
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        if (file.isEmpty()) {
+            throw new RuntimeException("请选择要导入的文件");
+        }
+
+        try {
+            List<QuestionDTO> parsedQuestions = fileParserService.parseFile(file);
+            
+            if (parsedQuestions.isEmpty()) {
+                throw new RuntimeException("未从文件中解析出任何题目");
+            }
+
+            for (QuestionDTO q : parsedQuestions) {
+                q.setCourseId(courseId);
+            }
+
+            List<QuestionDTO> createdQuestions = questionService.batchCreateQuestions(parsedQuestions, username);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "导入成功");
+            result.put("count", createdQuestions.size());
+            result.put("questions", createdQuestions);
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("文件解析失败：" + e.getMessage());
+        }
+    }
+
+    @PostMapping("/parse-preview")
+    public ResponseEntity<List<QuestionDTO>> parsePreview(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal String username) {
+
+        if (file.isEmpty()) {
+            throw new RuntimeException("请选择要导入的文件");
+        }
+
+        try {
+            List<QuestionDTO> parsedQuestions = fileParserService.parseFile(file);
+            return ResponseEntity.ok(parsedQuestions);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("文件解析失败：" + e.getMessage());
+        }
     }
 }

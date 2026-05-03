@@ -33,10 +33,23 @@ export function getQuestionTypes() {
   return request.get('/questions/types')
 }
 
-export function importQuestions(file) {
+export function importQuestions(file, courseId) {
   const formData = new FormData()
   formData.append('file', file)
+  if (courseId) {
+    formData.append('courseId', courseId)
+  }
   return request.post('/questions/import', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+export function parsePreview(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/questions/parse-preview', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
