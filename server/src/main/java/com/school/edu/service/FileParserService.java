@@ -142,7 +142,7 @@ public class FileParserService {
                 String optionLabel = optionMatcher.group(1);
                 String optionContent = optionMatcher.group(2);
                 
-                optionLabel = optionLabel.replaceAll("[Ａ-Ｚ]", ch -> String.valueOf((char)(ch.charAt(0) - 'Ａ' + 'A')));
+                optionLabel = convertFullWidthToHalfWidth(optionLabel);
                 
                 if (optionsBuilder.length() > 0) {
                     optionsBuilder.append("\n");
@@ -195,5 +195,25 @@ public class FileParserService {
         }
 
         return question;
+    }
+
+    private String convertFullWidthToHalfWidth(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c >= 'Ａ' && c <= 'Ｚ') {
+                sb.append((char) (c - 'Ａ' + 'A'));
+            } else if (c >= 'ａ' && c <= 'ｚ') {
+                sb.append((char) (c - 'ａ' + 'a'));
+            } else if (c >= '０' && c <= '９') {
+                sb.append((char) (c - '０' + '0'));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString().toUpperCase();
     }
 }
