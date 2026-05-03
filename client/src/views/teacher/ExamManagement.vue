@@ -87,7 +87,7 @@
                   v-if="row.status === 'DRAFT'"
                   type="success"
                   link
-                  @click="publishExam(row)"
+                  @click="handlePublishExam(row)"
                 >
                   发布
                 </el-button>
@@ -111,7 +111,7 @@
                   v-if="row.gradedCount === row.submittedCount && row.submittedCount > 0 && !row.scoresPublished"
                   type="success"
                   link
-                  @click="publishScores(row)"
+                  @click="handlePublishScores(row)"
                 >
                   公布成绩
                 </el-button>
@@ -340,8 +340,8 @@ import {
   getExamSubmissions,
   createExam,
   updateExam,
-  publishExam,
-  publishScores,
+  publishExam as apiPublishExam,
+  publishScores as apiPublishScores,
   getExamStatuses
 } from '@/api/exams'
 
@@ -566,7 +566,7 @@ const editExam = async (row) => {
   }
 }
 
-const publishExam = async (row) => {
+const handlePublishExam = async (row) => {
   try {
     await ElMessageBox.confirm('确定要发布该考试吗？发布后学生可以参加考试。', '确认发布', {
       confirmButtonText: '确定',
@@ -574,7 +574,7 @@ const publishExam = async (row) => {
       type: 'warning'
     })
 
-    await publishExam(row.id)
+    await apiPublishExam(row.id)
     ElMessage.success('发布成功')
     fetchExams()
   } catch (error) {
@@ -618,7 +618,7 @@ const viewSubmissionDetail = (row) => {
   ElMessage.info('请前往阅卷页面查看详情')
 }
 
-const publishScores = async (row) => {
+const handlePublishScores = async (row) => {
   try {
     await ElMessageBox.confirm('确定要公布成绩吗？公布后所有学生都可以查看自己的成绩。', '确认公布', {
       confirmButtonText: '确定',
@@ -626,7 +626,7 @@ const publishScores = async (row) => {
       type: 'warning'
     })
 
-    await publishScores(row.id)
+    await apiPublishScores(row.id)
     ElMessage.success('成绩已公布')
     fetchExams()
   } catch (error) {
