@@ -37,9 +37,11 @@ public class AttendanceController {
         List<Long> presentStudentIds = (List<Long>) request.get("presentStudentIds");
         @SuppressWarnings("unchecked")
         List<Long> absentStudentIds = (List<Long>) request.get("absentStudentIds");
+        @SuppressWarnings("unchecked")
+        List<Long> lateStudentIds = (List<Long>) request.get("lateStudentIds");
 
         List<AttendanceDTO> attendances = attendanceService.batchCreateAttendance(
-                courseId, attendanceDate, presentStudentIds, absentStudentIds, username);
+                courseId, attendanceDate, presentStudentIds, absentStudentIds, lateStudentIds, username);
         return ResponseEntity.ok(attendances);
     }
 

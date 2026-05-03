@@ -384,12 +384,15 @@ const saveAttendance = async () => {
   try {
     const presentStudentIds = []
     const absentStudentIds = []
+    const lateStudentIds = []
 
     enrolledStudents.value.forEach(student => {
       if (student.attendanceStatus === 'PRESENT') {
         presentStudentIds.push(student.id)
       } else if (student.attendanceStatus === 'ABSENT') {
         absentStudentIds.push(student.id)
+      } else if (student.attendanceStatus === 'LATE') {
+        lateStudentIds.push(student.id)
       }
     })
 
@@ -397,10 +400,11 @@ const saveAttendance = async () => {
       courseId: currentCourse.value.id,
       attendanceDate: attendanceForm.value.attendanceDate,
       presentStudentIds,
-      absentStudentIds
+      absentStudentIds,
+      lateStudentIds
     })
 
-    ElMessage.success('考勤保存成功！缺勤学生将收到通知')
+    ElMessage.success('考勤保存成功！缺勤/迟到学生将收到通知')
     await loadTodayAttendance()
   } catch (error) {
     console.error(error)

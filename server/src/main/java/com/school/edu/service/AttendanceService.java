@@ -95,7 +95,8 @@ public class AttendanceService {
 
     @Transactional
     public List<AttendanceDTO> batchCreateAttendance(Long courseId, LocalDate attendanceDate, 
-            List<Long> presentStudentIds, List<Long> absentStudentIds, String teacherUsername) {
+            List<Long> presentStudentIds, List<Long> absentStudentIds, List<Long> lateStudentIds, 
+            String teacherUsername) {
         
         User teacher = userRepository.findByUsername(teacherUsername)
                 .orElseThrow(() -> new RuntimeException("教师不存在"));
@@ -123,6 +124,8 @@ public class AttendanceService {
                 status = Attendance.AttendanceStatus.PRESENT;
             } else if (absentStudentIds != null && absentStudentIds.contains(student.getId())) {
                 status = Attendance.AttendanceStatus.ABSENT;
+            } else if (lateStudentIds != null && lateStudentIds.contains(student.getId())) {
+                status = Attendance.AttendanceStatus.LATE;
             } else {
                 status = Attendance.AttendanceStatus.ABSENT;
             }
@@ -140,6 +143,8 @@ public class AttendanceService {
 
             if (status == Attendance.AttendanceStatus.ABSENT) {
                 createAbsentNotification(savedAttendance, course);
+            } else if (status == Attendance.AttendanceStatus.LATE) {
+                createLateNotification(savedAttendance, course);
             }
         }
 
@@ -149,6 +154,9 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
+    @Autowired
+    private NotificationService notificationService;
+
     private void createAbsentNotification(Attendance attendance, Course course) {
         String message = String.format("您于 %s（%s）第%d-%d节课 %s 缺勤，请确认。如有异议请发起申诉。",
                 attendance.getAttendanceDate().toString(),
@@ -157,13 +165,28 @@ public class AttendanceService {
                 course.getEndSection(),
                 course.getCourseName());
 
-        AttendanceNotification notification = new AttendanceNotification();
-        notification.setAttendance(attendance);
-        notification.setStudent(attendance.getStudent());
-        notification.setMessage(message);
-        notification.setStatus(AttendanceNotification.NotificationStatus.UNREAD);
+        notificationService.createNotification(
+            attendance.getStudent().getId(),
+            Notification.NotificationType.ATTENDANCE_ABSENT,
+            message,
+            attendance.getId()
+        );
+    }
 
-        notificationRepository.save(notification);
+    private void createLateNotification(Attendance attendance, Course course) {
+        String message = String.format("您于 %s（%s）第%d-%d节课 %s 迟到，请确认。",
+                attendance.getAttendanceDate().toString(),
+                formatDayOfWeek(course.getDayOfWeek()),
+                course.getStartSection(),
+                course.getEndSection(),
+                course.getCourseName());
+
+        notificationService.createNotification(
+            attendance.getStudent().getId(),
+            Notification.NotificationType.ATTENDANCE_ABSENT,
+            message,
+            attendance.getId()
+        );
     }
 
     public List<AttendanceDTO> getTeacherAttendances(String teacherUsername) {
