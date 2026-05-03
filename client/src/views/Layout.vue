@@ -42,6 +42,10 @@
             <el-icon><Tickets /></el-icon>
             <span>试卷管理</span>
           </el-menu-item>
+          <el-menu-item index="/exam-management">
+            <el-icon><School /></el-icon>
+            <span>考试管理</span>
+          </el-menu-item>
         </template>
 
         <template v-else-if="userStore.isStudent">
@@ -61,6 +65,10 @@
           <el-menu-item index="/student-homework">
             <el-icon><Edit /></el-icon>
             <span>我的作业</span>
+          </el-menu-item>
+          <el-menu-item index="/student-exam">
+            <el-icon><School /></el-icon>
+            <span>我的考试</span>
           </el-menu-item>
         </template>
       </el-menu>
@@ -165,7 +173,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getUnreadNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '@/api/notifications'
-import { Bell, Close, Warning, Clock, Document, User, Check, Collection, Tickets } from '@element-plus/icons-vue'
+import { Bell, Close, Warning, Clock, Document, User, Check, Collection, Tickets, School } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()

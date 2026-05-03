@@ -70,6 +70,18 @@ const routes = [
         meta: { title: '试卷管理', roles: ['TEACHER'] }
       },
       {
+        path: 'exam-management',
+        name: 'ExamManagement',
+        component: () => import('@/views/teacher/ExamManagement.vue'),
+        meta: { title: '考试管理', roles: ['TEACHER'] }
+      },
+      {
+        path: 'exam-grading/:id',
+        name: 'ExamGrading',
+        component: () => import('@/views/teacher/ExamGrading.vue'),
+        meta: { title: '考试阅卷', roles: ['TEACHER'] }
+      },
+      {
         path: 'select-courses',
         name: 'SelectCourses',
         component: () => import('@/views/student/SelectCourses.vue'),
@@ -98,6 +110,24 @@ const routes = [
         name: 'StudentHomework',
         component: () => import('@/views/student/StudentHomework.vue'),
         meta: { title: '我的作业', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student-exam',
+        name: 'StudentExam',
+        component: () => import('@/views/student/StudentExamList.vue'),
+        meta: { title: '我的考试', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student-exam/take/:id',
+        name: 'TakeExam',
+        component: () => import('@/views/student/StudentExam.vue'),
+        meta: { title: '参加考试', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student-exam/result/:id',
+        name: 'ExamResult',
+        component: () => import('@/views/student/StudentExamResult.vue'),
+        meta: { title: '考试成绩', roles: ['STUDENT'] }
       }
     ]
   }
